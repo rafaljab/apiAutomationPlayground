@@ -37,6 +37,7 @@ jobs:
       - name: Test with pytest
         env:
           ENVIRONMENT: ${{vars.ENVIRONMENT}}
+          ALLOWED_HOSTS_LIST: ${{vars.ALLOWED_HOSTS_LIST}}
           SECRET_KEY: ${{secrets.SECRET_KEY}}
         run: |
           pytest
