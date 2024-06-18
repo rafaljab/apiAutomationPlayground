@@ -7,7 +7,7 @@ from shop.serializers import ProductSerializer
 
 
 class ProductList(APIView):
-    def get(self, request):
+    def get(self, request, format=None):
         products = Product.objects.all()
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
@@ -20,7 +20,7 @@ class ProductDetail(APIView):
         except Product.DoesNotExist:
             raise Http404
 
-    def get(self, request, pk):
+    def get(self, request, pk, format=None):
         product = self.get_object(pk)
         serializer = ProductSerializer(product)
         return Response(serializer.data)

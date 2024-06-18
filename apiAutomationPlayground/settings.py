@@ -15,13 +15,15 @@ import environ
 
 
 # Env variables default configuration
-env = environ.Env(DEBUG=(bool, False))
+env = environ.Env(ENVIRONMENT=(str, "PROD"))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Take environment variables from .env file
 environ.Env.read_env(BASE_DIR / ".env")
+
+ENVIRONMENT = env("ENVIRONMENT")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -30,9 +32,12 @@ environ.Env.read_env(BASE_DIR / ".env")
 SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env("DEBUG")
+DEBUG = ENVIRONMENT == "LOCAL"
 
-ALLOWED_HOSTS = []
+if DEBUG:
+    ALLOWED_HOSTS = []
+else:
+    ALLOWED_HOSTS = env.list("ALLOWED_HOSTS_LIST")
 
 
 # Application definition
@@ -82,12 +87,17 @@ WSGI_APPLICATION = "apiAutomationPlayground.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+if ENVIRONMENT == "PROD":
+    DATABASES = {
+        "default": env.db(),
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation
@@ -124,7 +134,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "static"
+STATIC_URL = "/static/"
 
 # Media
 MEDIA_ROOT = BASE_DIR / "media"
