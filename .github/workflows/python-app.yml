@@ -38,6 +38,7 @@ jobs:
         env:
           ENVIRONMENT: ${{vars.ENVIRONMENT}}
           ALLOWED_HOSTS_LIST: ${{vars.ALLOWED_HOSTS_LIST}}
+          BASE_URL_FULL: ${{vars.BASE_URL_FULL}}
           SECRET_KEY: ${{secrets.SECRET_KEY}}
         run: |
           pytest
