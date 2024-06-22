@@ -126,6 +126,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# DRF
+REST_FRAMEWORK = {
+    "COERCE_DECIMAL_TO_STRING": False,
+}
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
