@@ -1,5 +1,6 @@
 import pytest
 from decimal import Decimal
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -55,10 +56,11 @@ def test_get_existing_products(sample_product):
     assert response.status_code == status.HTTP_200_OK
     assert response.data == [
         {
+            "id": sample_product.id,
             "title": sample_product.title,
             "description": sample_product.description,
-            "price": str(sample_product.price),
-            "image": sample_product.image.url,
+            "price": sample_product.price,
+            "image": settings.BASE_URL_FULL + sample_product.image.url,
         }
     ]
 
@@ -85,8 +87,9 @@ def test_get_existing_product(sample_product):
     # Assert
     assert response.status_code == status.HTTP_200_OK
     assert response.data == {
+        "id": sample_product.id,
         "title": sample_product.title,
         "description": sample_product.description,
-        "price": str(sample_product.price),
-        "image": sample_product.image.url,
+        "price": sample_product.price,
+        "image": settings.BASE_URL_FULL + sample_product.image.url,
     }
