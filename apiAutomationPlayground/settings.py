@@ -39,6 +39,8 @@ if DEBUG:
 else:
     ALLOWED_HOSTS = env.list("ALLOWED_HOSTS_LIST")
 
+BASE_URL_FULL = env("BASE_URL_FULL")
+
 # Cors
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
