@@ -91,6 +91,7 @@ pyvenv.cfg
 pip-selfcheck.json
 
 ### Django template
+logs/
 *.log
 *.pot
 *.pyc
