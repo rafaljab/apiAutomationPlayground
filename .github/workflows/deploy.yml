@@ -1,0 +1,108 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      NEW_VERSION: ""
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Bump version
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          NEW_VERSION=$(python3 -c "
+          import re
+          with open('pyproject.toml', 'r', encoding='utf-8') as f:
+              content = f.read()
+          match = re.search(r'version\s*=\s*\"(\d+)\.(\d+)\.(\d+)\"', content)
+          if match:
+              major, minor, patch = int(match.group(1)), int(match.group(2)), int(match.group(3))
+              new_version = f'{major}.{minor}.{patch + 1}'
+              new_content = content[:match.start()] + f'version = \"{new_version}\"' + content[match.end():]
+              with open('pyproject.toml', 'w', encoding='utf-8') as f:
+                  f.write(new_content)
+              print(new_version)
+          else:
+              raise ValueError('Version string not found')
+          ")
+          echo "Bumping version to $NEW_VERSION"
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          
+          uv lock
+          git add pyproject.toml uv.lock
+          git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
+          git push
+          git push --tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        run: |
+          gh release create "v${{ env.NEW_VERSION }}" --generate-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger PythonAnywhere Deployment
+        env:
+          PA_USERNAME: ${{ vars.PA_USERNAME }}
+          PA_API_TOKEN: ${{ secrets.PA_API_TOKEN }}
+        run: |
+          echo "Starting PythonAnywhere bash console..."
+          CONSOLE_ID=$(curl -s -X POST \
+            "https://www.pythonanywhere.com/api/v0/user/$PA_USERNAME/consoles/" \
+            -H "Authorization: Token $PA_API_TOKEN" \
+            -d "executable=bash" | jq -r .id)
+          
+          if [ -z "$CONSOLE_ID" ] || [ "$CONSOLE_ID" == "null" ]; then
+            echo "Failed to start console on PythonAnywhere. Check credentials."
+            exit 1
+          fi
+
+          echo "Sending command to pull latest code, sync dependencies, and run Django commands..."
+          curl -s -X POST \
+            "https://www.pythonanywhere.com/api/v0/user/$PA_USERNAME/consoles/$CONSOLE_ID/send_input/" \
+            -H "Authorization: Token $PA_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"input\": \"cd ~/apiAutomationPlayground && git pull origin master && uv sync --no-dev --group prod && uv run manage.py migrate && uv run manage.py collectstatic --noinput\n\"}"
+          
+          echo "Waiting for pull and installation to complete (30s)..."
+          sleep 30
+          
+          echo "Closing console..."
+          curl -s -X DELETE \
+            "https://www.pythonanywhere.com/api/v0/user/$PA_USERNAME/consoles/$CONSOLE_ID/" \
+            -H "Authorization: Token $PA_API_TOKEN"
+          
+          echo "Reloading PythonAnywhere web app..."
+          curl -f -s -X POST \
+            "https://www.pythonanywhere.com/api/v0/user/$PA_USERNAME/webapps/apiautomationplayground.pythonanywhere.com/reload/" \
+            -H "Authorization: Token $PA_API_TOKEN"
+
+          echo "Deployment initiated successfully!"
