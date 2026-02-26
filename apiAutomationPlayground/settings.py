@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import environ
 
-
 # Env variables default configuration
 env = environ.Env(ENVIRONMENT=(str, "PROD"))
 
