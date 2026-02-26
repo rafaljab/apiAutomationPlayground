@@ -21,6 +21,7 @@ For your test automation practice, you can:
 
 ### Dependencies
 * [Python](https://www.python.org/) (I use version 3.12.3, but you can probably use a newer version too)
+* [uv](https://docs.astral.sh/uv/getting-started/installation/) - an extremely fast Python package and project manager
 
 ### Set-Up
 Clone the repository:
@@ -33,26 +34,16 @@ Instead of cloning/forking the repository, you can download the release of your 
 Just go to the [selected release](https://github.com/rafaljab/apiAutomationPlayground/releases), 
 and download a zip file with source code. Then, unzip the file to the desired location.
 
-Then you need to create a virtual environment. If you don't have virtualenv package installed on your machine, 
-you need to run this command first:
-```bash
-pip install virtualenv
-```
-
-Now, you can create and activate a new virtual environment, but first, go to the main catalog:
+Go to the project directory:
 ```bash
 cd apiAutomationPlayground
-python -m venv .venv
-.\.venv\Scripts\activate
 ```
 
-The above instructions work for Windows (Powershell). If you have Unix/macOS or want to learn more 
-about virtual environments, here's the official documentation: 
-[Installing packages using pip and virtual environments](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/).
+Instead of using standard `pip` and `venv`, this project uses `uv` for dependency management. If you don't have `uv` installed, [install it first](https://docs.astral.sh/uv/getting-started/installation/) (e.g. `pip install uv` or `Invoke-WebRequest -Uri https://astral.sh/uv/install.ps1 -OutFile uv-install.ps1; .\uv-install.ps1`).
 
-Now, when you've activated the virtual environment, install all required packages in it:
+Now, ask `uv` to automatically create a virtual environment and install all dependencies:
 ```bash
-pip install -r requirements/base.txt
+uv sync --all-groups
 ```
 
 Create an `.env` file in the root directory (apiAutomationPlayground). 
@@ -68,17 +59,20 @@ You can start the application manually (A) or by using a ready-made CMD script (
 
 Run the following command to start the application (dev mode):
 ```bash
-.\.venv\Scripts\activate
-python manage.py runserver
+uv run manage.py runserver
 ```
 Open your web browser and go to: [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
 
 **B) Using CMD Script (Windows)**
 
-Just open the `start-app.cmd` file. It will run above commands for you.
+Just open the `start-app.cmd` file. It will run the above command for you.
 
 ## Tests
 This repository also contains API tests (using Pytest) - see `shop/tests.py` for an example.
+You can run them using:
+```bash
+uv run pytest
+```
 
 You can find end-to-end automated tests in separate repositories:
 - [helloPlaywrightPy](https://github.com/rafaljab/helloPlaywrightPy) - Playwright with Python
