@@ -1,6 +1,3 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
 name: apiAutomationPlayground
 
 on:
@@ -19,25 +16,24 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements/dev.txt ]; then pip install -r requirements/dev.txt; fi
+        run: uv sync --all-groups
       - name: Lint with black
-        uses: psf/black@stable
-        with:
-          options: "--check --verbose"
-          version: "24.4.2"
+        run: uv run black . --check --verbose
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          uv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics --extend-ignore E203,E701
+          uv run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics --extend-ignore E203,E701
       - name: Test with pytest
         env:
           ENVIRONMENT: ${{vars.ENVIRONMENT}}
@@ -46,4 +42,4 @@ jobs:
           BASE_URL_FULL: ${{vars.BASE_URL_FULL}}
           SECRET_KEY: ${{secrets.SECRET_KEY}}
         run: |
-          pytest
+          uv run pytest
