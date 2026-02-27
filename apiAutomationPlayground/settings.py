@@ -47,7 +47,7 @@ else:
     CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS_LIST")
 
 # Deploy
-DEPLOY_TOKEN = env("DEPLOY_TOKEN")
+DEPLOY_TOKEN = env("DEPLOY_TOKEN", default="")
 
 # Application definition
 
