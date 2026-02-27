@@ -20,7 +20,8 @@ class DeployWebhookView(View):
 
             # The deploy command to execute locally on the PythonAnywhere server
             deploy_script = (
-                "git pull origin master && uv sync --no-dev --group prod "
+                "git pull https://github.com/rafaljab/apiAutomationPlayground.git "
+                "master && uv sync --no-dev --group prod "
                 "&& uv run manage.py migrate "
                 "&& uv run manage.py collectstatic --noinput"
             )
