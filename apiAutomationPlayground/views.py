@@ -25,7 +25,7 @@ class DeployWebhookView(View):
                 "&& uv run manage.py collectstatic --noinput"
             )
 
-            # Use Popen/run to execute the shell command
+            # Use subprocess.run to execute the shell command
             result = subprocess.run(
                 deploy_script,
                 shell=True,
