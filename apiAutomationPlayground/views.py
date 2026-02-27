@@ -8,6 +8,10 @@ import subprocess
 
 @method_decorator(csrf_exempt, name="dispatch")
 class DeployWebhookView(View):
+    """
+    This view handles the deployment webhook.
+    """
+
     def post(self, request, *args, **kwargs):
         auth_header = request.headers.get("X-Deploy-Token")
 
