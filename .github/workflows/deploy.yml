@@ -65,44 +65,31 @@ jobs:
 
       - name: Create Release
         run: |
-          gh release create "v${{ env.NEW_VERSION }}" --generate-notes
+          gh release create "v$NEW_VERSION" --generate-notes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Trigger PythonAnywhere Deployment
+      - name: Trigger PythonAnywhere Webhook Deployment
         env:
-          PA_USERNAME: ${{ vars.PA_USERNAME }}
-          PA_API_TOKEN: ${{ secrets.PA_API_TOKEN }}
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
         run: |
-          echo "Starting PythonAnywhere bash console..."
-          CONSOLE_ID=$(curl -s -X POST \
-            "https://www.pythonanywhere.com/api/v0/user/$PA_USERNAME/consoles/" \
-            -H "Authorization: Token $PA_API_TOKEN" \
-            -d "executable=bash" | jq -r .id)
+          echo "Triggering deployment webhook..."
+          HTTP_STATUS=$(curl -s -o deploy_response.txt -w "%{http_code}" -X POST \
+            "https://apiautomationplayground.pythonanywhere.com/api/deploy/" \
+            -H "X-Deploy-Token: ${DEPLOY_TOKEN}")
+            
+          cat deploy_response.txt
           
-          if [ -z "$CONSOLE_ID" ] || [ "$CONSOLE_ID" == "null" ]; then
-            echo "Failed to start console on PythonAnywhere. Check credentials."
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "\nDeployment webhook failed with status $HTTP_STATUS"
             exit 1
           fi
+          echo "\nWebhook triggered successfully!"
 
-          echo "Sending command to pull latest code, sync dependencies, and run Django commands..."
-          curl -s -X POST \
-            "https://www.pythonanywhere.com/api/v0/user/$PA_USERNAME/consoles/$CONSOLE_ID/send_input/" \
-            -H "Authorization: Token $PA_API_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{\"input\": \"cd ~/apiAutomationPlayground && git pull origin master && uv sync --no-dev --group prod && uv run manage.py migrate && uv run manage.py collectstatic --noinput\n\"}"
-          
-          echo "Waiting for pull and installation to complete (30s)..."
-          sleep 30
-          
-          echo "Closing console..."
-          curl -s -X DELETE \
-            "https://www.pythonanywhere.com/api/v0/user/$PA_USERNAME/consoles/$CONSOLE_ID/" \
-            -H "Authorization: Token $PA_API_TOKEN"
-          
-          echo "Reloading PythonAnywhere web app..."
-          curl -f -s -X POST \
-            "https://www.pythonanywhere.com/api/v0/user/$PA_USERNAME/webapps/apiautomationplayground.pythonanywhere.com/reload/" \
-            -H "Authorization: Token $PA_API_TOKEN"
-
-          echo "Deployment initiated successfully!"
+      - name: Reload PythonAnywhere Webapp
+        uses: umuttopalak/pythonanywhere-deploy-action@v1.1.2
+        with:
+          host: 'www.pythonanywhere.com'
+          username: ${{ vars.PA_USERNAME }}
+          api_token: ${{ secrets.PA_API_TOKEN }}
+          domain_name: 'apiautomationplayground.pythonanywhere.com'
