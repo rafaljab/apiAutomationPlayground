@@ -87,9 +87,19 @@ jobs:
           echo "\nWebhook triggered successfully!"
 
       - name: Reload PythonAnywhere Webapp
-        uses: umuttopalak/pythonanywhere-deploy-action@v1.1.2
-        with:
-          host: 'www.pythonanywhere.com'
-          username: ${{ vars.PA_USERNAME }}
-          api_token: ${{ secrets.PA_API_TOKEN }}
-          domain_name: 'apiautomationplayground.pythonanywhere.com'
+        env:
+          PA_USERNAME: ${{ vars.PA_USERNAME }}
+          PA_API_TOKEN: ${{ secrets.PA_API_TOKEN }}
+        run: |
+          echo "Reloading PythonAnywhere web app..."
+          HTTP_STATUS=$(curl -s -o reload_response.txt -w "%{http_code}" -X POST \
+            "https://www.pythonanywhere.com/api/v0/user/$PA_USERNAME/webapps/apiautomationplayground.pythonanywhere.com/reload/" \
+            -H "Authorization: Token $PA_API_TOKEN")
+            
+          cat reload_response.txt
+          
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "\nWebapp reload failed with status $HTTP_STATUS"
+            exit 1
+          fi
+          echo "\nWebapp reloaded successfully!"
