@@ -24,7 +24,9 @@ from django.conf.urls.static import static
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/shop/", include("shop.urls")),
+    path("api/users/", include("users.urls")),
     path("api/deploy/", DeployWebhookView.as_view(), name="deploy"),
+    path("api/_allauth/", include("allauth.headless.urls")),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

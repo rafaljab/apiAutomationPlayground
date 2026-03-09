@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import environ
+from corsheaders.defaults import default_headers
 
 # Env variables default configuration
 env = environ.Env(ENVIRONMENT=(str, "PROD"))
@@ -46,6 +47,18 @@ if DEBUG:
 else:
     CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS_LIST")
 
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = (
+    *default_headers,
+    "x-session-token",
+)
+SESSION_COOKIE_DOMAIN = env("SESSION_COOKIE_DOMAIN", default="localhost")
+CSRF_COOKIE_DOMAIN = env("CSRF_COOKIE_DOMAIN", default="localhost")
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS_LIST", default=["http://localhost:5173"]
+)
+CSRF_COOKIE_HTTPONLY = False
+
 # Deploy
 DEPLOY_TOKEN = env("DEPLOY_TOKEN", default="")
 
@@ -59,8 +72,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "shop.apps.ShopConfig",
+    "users.apps.UsersConfig",
     "rest_framework",
     "corsheaders",
+    "allauth",
+    "allauth.account",
+    "allauth.headless",
 ]
 
 MIDDLEWARE = [
@@ -72,6 +89,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "apiAutomationPlayground.urls"
@@ -137,6 +155,17 @@ REST_FRAMEWORK = {
     "COERCE_DECIMAL_TO_STRING": False,
 }
 
+# django-allauth settings
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+ACCOUNT_LOGIN_METHODS = {"username"}
+ACCOUNT_SIGNUP_FIELDS = ["username*", "password1*", "password2*"]
+# Explicitly removing email
+ACCOUNT_EMAIL_VERIFICATION = "none"
+HEADLESS_ONLY = True
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
