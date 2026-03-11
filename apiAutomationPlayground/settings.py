@@ -52,6 +52,9 @@ CORS_ALLOW_HEADERS = (
     *default_headers,
     "x-session-token",
 )
+CORS_EXPOSE_HEADERS = [
+    "x-csrftoken",
+]
 SESSION_COOKIE_DOMAIN = env("SESSION_COOKIE_DOMAIN", default=None)
 SESSION_COOKIE_SAMESITE = "None"
 SESSION_COOKIE_SECURE = True
@@ -89,6 +92,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "users.middleware.CsrfTokenResponseMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
